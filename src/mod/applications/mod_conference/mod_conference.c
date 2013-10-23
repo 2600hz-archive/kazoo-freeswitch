@@ -9103,6 +9103,7 @@ static struct _mapping control_mappings[] = {
     {"floor", conference_loop_fn_floor_toggle},
     {"enforce_floor", conference_loop_fn_enforce_floor},
 };
+
 #define MAPPING_LEN (sizeof(control_mappings)/sizeof(control_mappings[0]))
 
 static void member_bind_controls(conference_member_t *member, const char *controls)
@@ -9115,6 +9116,10 @@ static void member_bind_controls(conference_member_t *member, const char *contro
 	switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "Conf-Name", member->conference->name);
 	switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "Action", "request-controls");
 	switch_event_add_header_string(params, SWITCH_STACK_BOTTOM, "Controls", controls);
+
+        if (1) {
+                goto end;
+        }
 
 	if (!(cxml = switch_xml_open_cfg(global_cf_name, &cfg, params))) {
 		switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Open of %s failed\n", global_cf_name);
@@ -9152,11 +9157,11 @@ static void member_bind_controls(conference_member_t *member, const char *contro
  end:
 
 	/* Release the config registry handle */
-	if (cxml) {
+/*	if (cxml) {
 		switch_xml_free(cxml);
 		cxml = NULL;
 	}
-	
+*/	
 	if (params) switch_event_destroy(&params);
 	
 }
