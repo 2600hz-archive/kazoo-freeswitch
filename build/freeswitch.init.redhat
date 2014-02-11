@@ -14,9 +14,15 @@
 # Source function library.
 . /etc/init.d/functions
 
+
+#as some vps boxes on Centos 6.4 seem to have runuser isseus this may be a fix
+# see -https://groups.google.com/d/msg/2600hz-dev/fXY7UtxuuNM/MmXMQucgjKYJ
+
+
 PROG_NAME=freeswitch
 PID_FILE=${PID_FILE-/var/run/freeswitch/freeswitch.pid}
-FS_USER=${FS_USER-freeswitch}
+#FS_USER=${FS_USER-freeswitch}
+FS_USER=freeswitch
 FS_FILE=${FS_FILE-/usr/bin/freeswitch} 
 FS_HOME=${FS_HOME-/var/run/freeswitch}
 LOCK_FILE=/var/lock/subsys/freeswitch
