@@ -5581,10 +5581,13 @@ static void general_event_handler(switch_event_t *event)
 		{
 			const char *profile_name = switch_event_get_header(event, "profile");
 			const char *ct = switch_event_get_header(event, "content-type");
-			const char *user = switch_event_get_header(event, "user");
-			const char *host = switch_event_get_header(event, "host");
+			char *user = switch_event_get_header(event, "user");
+			char *host = switch_event_get_header(event, "host");
+			const char *to = switch_event_get_header(event, "to");
+			const char *from = switch_event_get_header(event, "from");
 			const char *subject = switch_event_get_header(event, "subject");
 			const char *uuid = switch_event_get_header(event, "uuid");
+			char *contact = switch_event_get_header(event, "contact");
 			const char *body = switch_event_get_body(event);
 
 			sofia_profile_t *profile;
@@ -5595,7 +5598,18 @@ static void general_event_handler(switch_event_t *event)
 				return;
 			}
 
-			if (ct && user && host) {
+/* AlanE: Added this 'if' to attempt to use to and from fields if provided in the SEND_MESSAGE Event */
+            if (ct && to && from && contact) {
+                    char *url = sofia_glue_get_url_from_contact(contact, 0);
+                    nh = nua_handle(profile->nua,
+                                    NULL, NUTAG_URL(url), SIPTAG_FROM_STR(from), SIPTAG_TO_STR(to), SIPTAG_CONTACT_STR(profile->url), TAG_END());
+
+                    nua_message(nh, NUTAG_NEWSUB(1), SIPTAG_CONTENT_TYPE_STR(ct),
+                                TAG_IF(!zstr(body), SIPTAG_PAYLOAD_STR(body)), TAG_IF(!zstr(subject), SIPTAG_SUBJECT_STR(subject)), TAG_END());
+                sofia_glue_release_profile(profile);
+
+/* AlanE: Original 'if' used user and host for both to and from fields - retained. just in case, for backward compat */
+			} else if (ct && user && host) {
 				char *id = NULL;
 				char *contact, *p;
 				switch_console_callback_match_t *list = NULL;
@@ -5618,7 +5632,7 @@ static void general_event_handler(switch_event_t *event)
 					}
 
 					nh = nua_handle(profile->nua,
-									NULL, NUTAG_URL(contact), SIPTAG_FROM_STR(id), SIPTAG_TO_STR(id), SIPTAG_CONTACT_STR(profile->url), TAG_END());
+									NULL, NUTAG_URL(contact), SIPTAG_FROM_STR(from), SIPTAG_TO_STR(to), SIPTAG_CONTACT_STR(profile->url), TAG_END());
 
 					nua_message(nh, NUTAG_NEWSUB(1), SIPTAG_CONTENT_TYPE_STR(ct),
 								TAG_IF(!zstr(body), SIPTAG_PAYLOAD_STR(body)), TAG_IF(!zstr(subject), SIPTAG_SUBJECT_STR(subject)), TAG_END());

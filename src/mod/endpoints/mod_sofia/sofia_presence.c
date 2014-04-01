@@ -4574,8 +4574,8 @@ void sofia_presence_handle_sip_i_message(int status,
 
 		if (nh) {
 			char hash_key[512];
-			private_object_t *tech_pvt;
-			switch_event_t *event, *event_dup;
+		/* 	private_object_t *tech_pvt;  */
+                        switch_event_t *event;
 			char *to_addr;
 			char *from_addr;
 			char *p;
@@ -4604,7 +4604,7 @@ void sofia_presence_handle_sip_i_message(int status,
 				sofia_presence_set_hash_key(hash_key, sizeof(hash_key), sip);
 			}
 
-			if (switch_event_create(&event, SWITCH_EVENT_MESSAGE) == SWITCH_STATUS_SUCCESS) {
+			if (switch_event_create(&event, SWITCH_EVENT_RECV_MESSAGE) == SWITCH_STATUS_SUCCESS) {
 				switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "login", profile->url);
 				switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "proto", SOFIA_CHAT_PROTO);
 
@@ -4640,31 +4640,26 @@ void sofia_presence_handle_sip_i_message(int status,
 
 
 				if (sofia_test_pflag(profile, PFLAG_FIRE_MESSAGE_EVENTS)) { 
-					if (switch_event_dup(&event_dup, event) == SWITCH_STATUS_SUCCESS) {
-						event_dup->event_id = SWITCH_EVENT_RECV_MESSAGE;
-						event_dup->flags |= EF_UNIQ_HEADERS;
-						switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "Event-Name", switch_event_name(event->event_id));
-						switch_event_fire(&event_dup);
-					}
+						switch_event_fire(&event);
 				}
 
 				if (session) {
-					if (switch_event_dup(&event_dup, event) == SWITCH_STATUS_SUCCESS) {
-						switch_core_session_queue_event(session, &event_dup);
-					}
+						switch_core_session_queue_event(session, &event);
 				}
 				
 
 			} else {
 				abort();
 			}
-			
+/*			
 			if (sofia_test_pflag(profile, PFLAG_IN_DIALOG_CHAT) && (tech_pvt = (private_object_t *) switch_core_hash_find(profile->chat_hash, hash_key))) {
 				switch_core_session_queue_event(tech_pvt->session, &event);
 			} else {
 				switch_core_chat_send(proto, event);
 				switch_event_destroy(&event);
 			}
+*/
+            switch_event_destroy(&event);
 
 			switch_safe_free(to_addr);
 			switch_safe_free(from_addr);
