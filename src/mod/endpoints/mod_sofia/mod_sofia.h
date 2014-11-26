@@ -97,6 +97,10 @@ typedef struct private_object private_object_t;
 #define MY_EVENT_ERROR "sofia::error"
 #define MY_EVENT_PROFILE_START "sofia::profile_start"
 
+#define MY_EVENT_TRANSFEROR "sofia::transferor"
+#define MY_EVENT_TRANSFEREE "sofia::transferee"
+#define MY_EVENT_REPLACED "sofia::replaced"
+
 #define MULTICAST_EVENT "multicast::event"
 #define SOFIA_REPLACES_HEADER "_sofia_replaces_"
 #define SOFIA_CHAT_PROTO "sip"
