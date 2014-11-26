@@ -1488,6 +1488,7 @@ SWITCH_STANDARD_APP(multiset_function)
 {
 	char delim = ' ';
 	char *arg = (char *) data;
+	switch_event_t *event;
 
 	if (!zstr(arg) && *arg == '^' && *(arg+1) == '^') {
 		arg += 2;
@@ -1495,6 +1496,7 @@ SWITCH_STANDARD_APP(multiset_function)
 	}
 
 	if (arg) {
+		switch_channel_t *channel = switch_core_session_get_channel(session);
 		char *array[256] = {0};
 		int i, argc;
 
@@ -1504,7 +1506,11 @@ SWITCH_STANDARD_APP(multiset_function)
 		for(i = 0; i < argc; i++) {
 			base_set(session, array[i], SWITCH_STACK_BOTTOM);
 		}
-		
+
+		if (switch_event_create(&event, SWITCH_EVENT_CHANNEL_DATA) == SWITCH_STATUS_SUCCESS) {
+			switch_channel_event_set_data(channel, event);
+			switch_event_fire(&event);
+		}
 
 	} else {
 		base_set(session, data, SWITCH_STACK_BOTTOM);
@@ -1513,7 +1519,15 @@ SWITCH_STANDARD_APP(multiset_function)
 
 SWITCH_STANDARD_APP(set_function)
 {
+	switch_channel_t *channel = switch_core_session_get_channel(session);
+	switch_event_t *event;
+
 	base_set(session, data, SWITCH_STACK_BOTTOM);
+
+	if (switch_event_create(&event, SWITCH_EVENT_CHANNEL_DATA) == SWITCH_STATUS_SUCCESS) {
+		switch_channel_event_set_data(channel, event);
+		switch_event_fire(&event);
+	}
 }
 
 SWITCH_STANDARD_APP(push_function)
@@ -1615,11 +1629,19 @@ SWITCH_STANDARD_APP(bridge_export_function)
 
 SWITCH_STANDARD_APP(unset_function)
 {
+	switch_channel_t *channel = switch_core_session_get_channel(session);
+	switch_event_t *event;
+
 	if (zstr(data)) {
 		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_ERROR, "No variable name specified.\n");
 	} else {
 		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "UNSET [%s]\n", (char *) data);
 		switch_channel_set_variable(switch_core_session_get_channel(session), data, NULL);
+	}
+	
+	if (switch_event_create(&event, SWITCH_EVENT_CHANNEL_DATA) == SWITCH_STATUS_SUCCESS) {
+		switch_channel_event_set_data(channel, event);
+		switch_event_fire(&event);
 	}
 }
 
@@ -2762,12 +2784,18 @@ SWITCH_STANDARD_APP(playback_function)
 
 SWITCH_STANDARD_APP(endless_playback_function)
 {
+	switch_input_args_t args = { 0 };
 	switch_channel_t *channel = switch_core_session_get_channel(session);
 	switch_status_t status = SWITCH_STATUS_SUCCESS;
 	const char *file = data;
 
+	args.input_callback = on_dtmf;
+
+	switch_channel_set_variable(channel, SWITCH_PLAYBACK_TERMINATORS_VARIABLE, "none");
+
 	while (switch_channel_ready(channel)) {
-		status = switch_ivr_play_file(session, NULL, file, NULL);
+
+		status = switch_ivr_play_file(session, NULL, file, &args);
 
 		if (status != SWITCH_STATUS_SUCCESS && status != SWITCH_STATUS_BREAK) {
 			break;
