@@ -100,6 +100,9 @@ typedef struct private_object private_object_t;
 #define MY_EVENT_TRANSFEROR "sofia::transferor"
 #define MY_EVENT_TRANSFEREE "sofia::transferee"
 #define MY_EVENT_REPLACED "sofia::replaced"
+#define MY_EVENT_INTERCEPTED "sofia::intercepted"
+#define MY_EVENT_RESUMED "sofia::resumed"
+#define MY_EVENT_PICKED "sofia::picked"
 
 #define MULTICAST_EVENT "multicast::event"
 #define SOFIA_REPLACES_HEADER "_sofia_replaces_"
