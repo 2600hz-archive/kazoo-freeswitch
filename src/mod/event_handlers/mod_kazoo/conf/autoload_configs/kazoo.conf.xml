@@ -174,7 +174,7 @@
         <header name="Hangup-Cause" />
         <header name="Unique-ID" />
         <header name="variable_switch_r_sdp" />
-        <header name="variable_sip_local_sdp_str" />
+        <header name="variable_rtp_local_sdp_str" />
         <header name="variable_sip_to_uri" />
         <header name="variable_sip_from_uri" />
         <header name="variable_effective_caller_id_number" />

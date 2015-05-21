@@ -503,7 +503,7 @@ switch_hash_t *create_default_filter() {
 	switch_core_hash_insert(filter, "Hangup-Cause", "1");
 	switch_core_hash_insert(filter, "Unique-ID", "1");
 	switch_core_hash_insert(filter, "variable_switch_r_sdp", "1");
-	switch_core_hash_insert(filter, "variable_sip_local_sdp_str", "1");
+	switch_core_hash_insert(filter, "variable_rtp_local_sdp_str", "1");
 	switch_core_hash_insert(filter, "variable_sip_to_uri", "1");
 	switch_core_hash_insert(filter, "variable_sip_from_uri", "1");
 	switch_core_hash_insert(filter, "variable_sip_user_agent", "1");
