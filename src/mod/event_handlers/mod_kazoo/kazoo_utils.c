@@ -364,6 +364,9 @@ switch_hash_t *create_default_filter() {
 	switch_core_hash_insert(filter, "Caller-Callee-ID-Number", "1");
 	switch_core_hash_insert(filter, "Caller-Caller-ID-Name", "1");
 	switch_core_hash_insert(filter, "Caller-Caller-ID-Number", "1");
+    switch_core_hash_insert(filter, "Caller-Screen-Bit", "1");
+	switch_core_hash_insert(filter, "Caller-Privacy-Hide-Name", "1");
+    switch_core_hash_insert(filter, "Caller-Privacy-Hide-Number", "1");
 	switch_core_hash_insert(filter, "Caller-Context", "1");
 	switch_core_hash_insert(filter, "Caller-Controls", "1");
 	switch_core_hash_insert(filter, "Caller-Destination-Number", "1");
@@ -563,35 +566,30 @@ switch_hash_t *create_default_filter() {
 	switch_core_hash_insert(filter, "variable_fax_doc_database", "1");
 
 	/* Secure headers */
-	
-	  switch_core_hash_insert(filter, "variable_sdp_secure_savp_only", "1");
-	  switch_core_hash_insert(filter, "variable_rtp_has_crypto", "1");
-	  switch_core_hash_insert(filter, "variable_rtp_secure_media", "1");
-	  switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed", "1");
-	  switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed_audio", "1");
-	  switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed_video", "1");
-	  switch_core_hash_insert(filter, "variable_zrtp_secure_media", "1");
-	  switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed", "1");
-	  switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed_audio", "1");
-	  switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed_video", "1");
-	  switch_core_hash_insert(filter, "sdp_secure_savp_only", "1");
-	  switch_core_hash_insert(filter, "rtp_has_crypto", "1");
-	  switch_core_hash_insert(filter, "rtp_secure_media", "1");
-	  switch_core_hash_insert(filter, "rtp_secure_media_confirmed", "1");
-	  switch_core_hash_insert(filter, "rtp_secure_media_confirmed_audio", "1");
-	  switch_core_hash_insert(filter, "rtp_secure_media_confirmed_video", "1");
-	  switch_core_hash_insert(filter, "zrtp_secure_media", "1");
-	  switch_core_hash_insert(filter, "zrtp_secure_media_confirmed", "1");
-	  switch_core_hash_insert(filter, "zrtp_secure_media_confirmed_audio", "1");
-	  switch_core_hash_insert(filter, "zrtp_secure_media_confirmed_video", "1");
-	
+	switch_core_hash_insert(filter, "variable_sdp_secure_savp_only", "1");
+	switch_core_hash_insert(filter, "variable_rtp_has_crypto", "1");
+	switch_core_hash_insert(filter, "variable_rtp_secure_media", "1");
+	switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed", "1");
+	switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed_audio", "1");
+	switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed_video", "1");
+	switch_core_hash_insert(filter, "variable_zrtp_secure_media", "1");
+	switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed", "1");
+	switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed_audio", "1");
+	switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed_video", "1");
+	switch_core_hash_insert(filter, "sdp_secure_savp_only", "1");
+	switch_core_hash_insert(filter, "rtp_has_crypto", "1");
+	switch_core_hash_insert(filter, "rtp_secure_media", "1");
+	switch_core_hash_insert(filter, "rtp_secure_media_confirmed", "1");
+	switch_core_hash_insert(filter, "rtp_secure_media_confirmed_audio", "1");
+	switch_core_hash_insert(filter, "rtp_secure_media_confirmed_video", "1");
+	switch_core_hash_insert(filter, "zrtp_secure_media", "1");
+	switch_core_hash_insert(filter, "zrtp_secure_media_confirmed", "1");
+	switch_core_hash_insert(filter, "zrtp_secure_media_confirmed_audio", "1");
+	switch_core_hash_insert(filter, "zrtp_secure_media_confirmed_video", "1");
 
 	/* Device Redirect headers */
-	
-	  switch_core_hash_insert(filter, "variable_last_bridge_hangup_cause", "1");
-	  switch_core_hash_insert(filter, "variable_sip_redirected_by", "1");
-	
-
+    switch_core_hash_insert(filter, "variable_last_bridge_hangup_cause", "1");
+    switch_core_hash_insert(filter, "variable_sip_redirected_by", "1");
 	switch_core_hash_insert(filter, "intercepted_by", "1");
 	switch_core_hash_insert(filter, "variable_bridge_uuid", "1");
 	switch_core_hash_insert(filter, "Record-File-Path", "1");
