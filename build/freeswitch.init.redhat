@@ -25,51 +25,64 @@ RETVAL=0
 
 # Source usr/localions file
 if [ -f /etc/sysconfig/freeswitch ]; then
-	. /etc/sysconfig/freeswitch
+    . /etc/sysconfig/freeswitch
 fi
 
 # <define any local shell functions used by the code that follows>
 
 start() {
-        echo -n "Starting $PROG_NAME: "
-        if [ -e $LOCK_FILE ]; then
-            if [ -e $PID_FILE ] && [ -e /proc/`cat $PID_FILE` ]; then
-                echo
-                echo -n $"$PROG_NAME is already running.";
-                failure $"$PROG_NAME is already running.";
-                echo
-                return 1
-            fi
+    echo -n "Starting $PROG_NAME: "
+    if [ -e $LOCK_FILE ]; then
+        if [ -e $PID_FILE ] && [ -e /proc/`cat $PID_FILE` ]; then
+            echo
+            echo -n $"$PROG_NAME is already running.";
+            failure $"$PROG_NAME is already running.";
+            echo
+            return 1
         fi
-	cd $FS_HOME
-        daemon --user $FS_USER --pidfile $PID_FILE "$FS_FILE $FREESWITCH_ARGS $FREESWITCH_PARAMS >/dev/null 2>&1"
-		RETVAL=$?
-		echo
-        [ $RETVAL -eq 0 ] && touch $LOCK_FILE;
-	echo
-        return $RETVAL
+    fi
+    cd $FS_HOME
+    daemon --user $FS_USER --pidfile $PID_FILE "$FS_FILE $FREESWITCH_ARGS $FREESWITCH_PARAMS >/dev/null 2>&1"
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ]; then
+        touch $LOCK_FILE;
+        success
+    else 
+        failure
+    fi
+    echo
+    return $RETVAL
 }
 
 stop() {
-        echo -n "Shutting down $PROG_NAME: "
-        if [ ! -e $LOCK_FILE ]; then
-            echo
-            echo -n $"cannot stop $PROG_NAME: $PROG_NAME is not running."
-            failure $"cannot stop $PROG_NAME: $PROG_NAME is not running."
-            echo
-            return 1;
-        fi
-	cd $FS_HOME
-	$FS_FILE -stop > /dev/null 2>&1
-        killproc $PROG_NAME
-	RETVAL=$?
-	echo
-	[ $RETVAL -eq 0 ] &&  rm -f $LOCK_FILE;
-        return $RETVAL
+    echo -n "Shutting down $PROG_NAME: "
+    if [ ! -e $LOCK_FILE ]; then
+        echo
+        echo -n $"cannot stop $PROG_NAME: $PROG_NAME is not running."
+        failure $"cannot stop $PROG_NAME: $PROG_NAME is not running."
+        echo
+        return 1;
+    fi
+    $FS_FILE -stop > /dev/null 2>&1
+    RETVAL=$?
+     
+    if [ $RETVAL -ne 0 ]; then
+       killproc $PROG_NAME
+    fi 
+
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ]; then
+        rm -f $LOCK_FILE;
+        success
+    else
+        failure
+    fi 
+    echo
+    return $RETVAL
 }
 
 rhstatus() {
-	status $PROG_NAME;
+    status $PROG_NAME;
 }
 
 case "$1" in
@@ -81,10 +94,11 @@ case "$1" in
         ;;
     status)
         status $PROG_NAME
-	RETVAL=$?
+        RETVAL=$?
         ;;
     restart)
         stop
+        sleep 5
         start
         ;;
     reload)
@@ -94,7 +108,7 @@ case "$1" in
         ;;
     condrestart)
         [ -f $PID_FILE ] && restart || :
-	;;
+        ;;
     *)
         echo "Usage: $PROG_NAME {start|stop|status|reload|restart}"
         exit 1
