@@ -139,11 +139,11 @@ void close_socketfd(int *sockfd) {
 	}
 }
 
-switch_socket_t *create_socket(switch_memory_pool_t *pool) {
+switch_socket_t *create_socket_with_port(switch_memory_pool_t *pool, switch_port_t port) {
 	switch_sockaddr_t *sa;
 	switch_socket_t *socket;
 
-	if(switch_sockaddr_info_get(&sa, globals.ip, SWITCH_UNSPEC, 0, 0, pool)) {
+	if(switch_sockaddr_info_get(&sa, globals.ip, SWITCH_UNSPEC, port, 0, pool)) {
 		return NULL;
 	}
 
@@ -168,6 +168,11 @@ switch_socket_t *create_socket(switch_memory_pool_t *pool) {
 	//	}
 
 	return socket;
+}
+
+switch_socket_t *create_socket(switch_memory_pool_t *pool) {
+	return create_socket_with_port(pool, 0);
+
 }
 
 switch_status_t create_ei_cnode(const char *ip_addr, const char *name, struct ei_cnode_s *ei_cnode) {
@@ -328,7 +333,7 @@ int ei_decode_string_or_binary_limited(char *buf, int *index, int maxsize, char 
 
 	if (type == ERL_NIL_EXT) {
 		res = 0;
-		dst = '\0';
+		*dst = '\0';
 	} else if (type == ERL_BINARY_EXT) {
         res = ei_decode_binary(buf, index, dst, &len);
         dst[len] = '\0'; /* binaries aren't null terminated */
@@ -364,6 +369,9 @@ switch_hash_t *create_default_filter() {
 	switch_core_hash_insert(filter, "Caller-Callee-ID-Number", "1");
 	switch_core_hash_insert(filter, "Caller-Caller-ID-Name", "1");
 	switch_core_hash_insert(filter, "Caller-Caller-ID-Number", "1");
+	switch_core_hash_insert(filter, "Caller-Screen-Bit", "1");
+	switch_core_hash_insert(filter, "Caller-Privacy-Hide-Name", "1");
+	switch_core_hash_insert(filter, "Caller-Privacy-Hide-Number", "1");
 	switch_core_hash_insert(filter, "Caller-Context", "1");
 	switch_core_hash_insert(filter, "Caller-Controls", "1");
 	switch_core_hash_insert(filter, "Caller-Destination-Number", "1");
@@ -469,6 +477,9 @@ switch_hash_t *create_default_filter() {
 	switch_core_hash_insert(filter, "whistle_application_name", "1");
 	switch_core_hash_insert(filter, "whistle_application_response", "1");
 	switch_core_hash_insert(filter, "whistle_event_name", "1");
+	switch_core_hash_insert(filter, "kazoo_application_name", "1");
+	switch_core_hash_insert(filter, "kazoo_application_response", "1");
+	switch_core_hash_insert(filter, "kazoo_event_name", "1");
 	switch_core_hash_insert(filter, "sip_auto_answer_notify", "1");
 	switch_core_hash_insert(filter, "eavesdrop_group", "1");
 	switch_core_hash_insert(filter, "origination_caller_id_name", "1");
@@ -481,6 +492,21 @@ switch_hash_t *create_default_filter() {
 	switch_core_hash_insert(filter, "effective_caller_id_number", "1");
 	switch_core_hash_insert(filter, "effective_callee_id_name", "1");
 	switch_core_hash_insert(filter, "effective_callee_id_number", "1");
+	switch_core_hash_insert(filter, "variable_destination_number", "1");
+	switch_core_hash_insert(filter, "variable_effective_callee_id_name", "1");
+	switch_core_hash_insert(filter, "variable_effective_callee_id_number", "1");
+	switch_core_hash_insert(filter, "variable_record_silence_hits", "1");
+	switch_core_hash_insert(filter, "variable_refer_uuid", "1");
+	switch_core_hash_insert(filter, "variable_sip_call_id", "1");
+	switch_core_hash_insert(filter, "variable_sip_h_Referred-By", "1");
+	switch_core_hash_insert(filter, "variable_sip_h_X-AUTH-PORT", "1");
+	switch_core_hash_insert(filter, "variable_sip_loopback_req_uri", "1");
+	switch_core_hash_insert(filter, "variable_sip_received_port", "1");
+	switch_core_hash_insert(filter, "variable_sip_refer_to", "1");
+	switch_core_hash_insert(filter, "variable_sip_req_host", "1");
+	switch_core_hash_insert(filter, "variable_sip_req_uri", "1");
+	switch_core_hash_insert(filter, "variable_transfer_source", "1");
+	switch_core_hash_insert(filter, "variable_uuid", "1");
 
 	/* Registration headers */
 	switch_core_hash_insert(filter, "call-id", "1");
@@ -503,12 +529,13 @@ switch_hash_t *create_default_filter() {
 	switch_core_hash_insert(filter, "Hangup-Cause", "1");
 	switch_core_hash_insert(filter, "Unique-ID", "1");
 	switch_core_hash_insert(filter, "variable_switch_r_sdp", "1");
-	switch_core_hash_insert(filter, "variable_sip_local_sdp_str", "1");
+	switch_core_hash_insert(filter, "variable_rtp_local_sdp_str", "1");
 	switch_core_hash_insert(filter, "variable_sip_to_uri", "1");
 	switch_core_hash_insert(filter, "variable_sip_from_uri", "1");
 	switch_core_hash_insert(filter, "variable_sip_user_agent", "1");
 	switch_core_hash_insert(filter, "variable_duration", "1");
 	switch_core_hash_insert(filter, "variable_billsec", "1");
+	switch_core_hash_insert(filter, "variable_billmsec", "1");
 	switch_core_hash_insert(filter, "variable_progresssec", "1");
 	switch_core_hash_insert(filter, "variable_progress_uepoch", "1");
 	switch_core_hash_insert(filter, "variable_progress_media_uepoch", "1");
@@ -561,40 +588,43 @@ switch_hash_t *create_default_filter() {
 	switch_core_hash_insert(filter, "variable_fax_timezone", "1");
 	switch_core_hash_insert(filter, "variable_fax_doc_id", "1");
 	switch_core_hash_insert(filter, "variable_fax_doc_database", "1");
+	switch_core_hash_insert(filter, "variable_has_t38", "1");
 
 	/* Secure headers */
-	
-	  switch_core_hash_insert(filter, "variable_sdp_secure_savp_only", "1");
-	  switch_core_hash_insert(filter, "variable_rtp_has_crypto", "1");
-	  switch_core_hash_insert(filter, "variable_rtp_secure_media", "1");
-	  switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed", "1");
-	  switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed_audio", "1");
-	  switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed_video", "1");
-	  switch_core_hash_insert(filter, "variable_zrtp_secure_media", "1");
-	  switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed", "1");
-	  switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed_audio", "1");
-	  switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed_video", "1");
-	  switch_core_hash_insert(filter, "sdp_secure_savp_only", "1");
-	  switch_core_hash_insert(filter, "rtp_has_crypto", "1");
-	  switch_core_hash_insert(filter, "rtp_secure_media", "1");
-	  switch_core_hash_insert(filter, "rtp_secure_media_confirmed", "1");
-	  switch_core_hash_insert(filter, "rtp_secure_media_confirmed_audio", "1");
-	  switch_core_hash_insert(filter, "rtp_secure_media_confirmed_video", "1");
-	  switch_core_hash_insert(filter, "zrtp_secure_media", "1");
-	  switch_core_hash_insert(filter, "zrtp_secure_media_confirmed", "1");
-	  switch_core_hash_insert(filter, "zrtp_secure_media_confirmed_audio", "1");
-	  switch_core_hash_insert(filter, "zrtp_secure_media_confirmed_video", "1");
-	
+	switch_core_hash_insert(filter, "variable_sdp_secure_savp_only", "1");
+	switch_core_hash_insert(filter, "variable_rtp_has_crypto", "1");
+	switch_core_hash_insert(filter, "variable_rtp_secure_media", "1");
+	switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed", "1");
+	switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed_audio", "1");
+	switch_core_hash_insert(filter, "variable_rtp_secure_media_confirmed_video", "1");
+	switch_core_hash_insert(filter, "variable_zrtp_secure_media", "1");
+	switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed", "1");
+	switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed_audio", "1");
+	switch_core_hash_insert(filter, "variable_zrtp_secure_media_confirmed_video", "1");
+	switch_core_hash_insert(filter, "sdp_secure_savp_only", "1");
+	switch_core_hash_insert(filter, "rtp_has_crypto", "1");
+	switch_core_hash_insert(filter, "rtp_secure_media", "1");
+	switch_core_hash_insert(filter, "rtp_secure_media_confirmed", "1");
+	switch_core_hash_insert(filter, "rtp_secure_media_confirmed_audio", "1");
+	switch_core_hash_insert(filter, "rtp_secure_media_confirmed_video", "1");
+	switch_core_hash_insert(filter, "zrtp_secure_media", "1");
+	switch_core_hash_insert(filter, "zrtp_secure_media_confirmed", "1");
+	switch_core_hash_insert(filter, "zrtp_secure_media_confirmed_audio", "1");
+	switch_core_hash_insert(filter, "zrtp_secure_media_confirmed_video", "1");
 
 	/* Device Redirect headers */
-	
-	  switch_core_hash_insert(filter, "variable_last_bridge_hangup_cause", "1");
-	  switch_core_hash_insert(filter, "variable_sip_redirected_by", "1");
-	
-
+	switch_core_hash_insert(filter, "variable_last_bridge_hangup_cause", "1");
+	switch_core_hash_insert(filter, "variable_sip_redirected_by", "1");
 	switch_core_hash_insert(filter, "intercepted_by", "1");
 	switch_core_hash_insert(filter, "variable_bridge_uuid", "1");
 	switch_core_hash_insert(filter, "Record-File-Path", "1");
+
+	/* Loopback headers */
+	switch_core_hash_insert(filter, "variable_loopback_bowout_on_execute", "1");
+	switch_core_hash_insert(filter, "variable_loopback_bowout", "1");
+	switch_core_hash_insert(filter, "variable_other_loopback_leg_uuid", "1");
+	switch_core_hash_insert(filter, "variable_loopback_leg", "1");
+	switch_core_hash_insert(filter, "variable_is_loopback", "1");
 
 	// SMS
 	switch_core_hash_insert(filter, "Message-ID", "1");
