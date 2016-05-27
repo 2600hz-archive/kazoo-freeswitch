@@ -48,9 +48,9 @@ struct ei_event_stream_s {
 	switch_socket_t *socket;
 	switch_mutex_t *socket_mutex;
 	switch_bool_t connected;
-	char remote_ip[25];
+	char remote_ip[48];
 	uint16_t remote_port;
-	char local_ip[25];
+	char local_ip[48];
 	uint16_t local_port;
 	erlang_pid pid;
 	uint32_t flags;
@@ -111,8 +111,10 @@ struct globals_s {
 	int event_stream_preallocate;
 	int send_msg_batch;
 	short event_stream_framing;
-} globals;
+	switch_port_t port;
+};
 typedef struct globals_s globals_t;
+extern globals_t globals;
 
 /* kazoo_node.c */
 switch_status_t new_kazoo_node(int nodefd, ErlConnect *conn);
@@ -139,6 +141,7 @@ switch_status_t handle_api_command_streams(ei_node_t *ei_node, switch_stream_han
 /* kazoo_utils.c */
 void close_socket(switch_socket_t **sock);
 void close_socketfd(int *sockfd);
+switch_socket_t *create_socket_with_port(switch_memory_pool_t *pool, switch_port_t port);
 switch_socket_t *create_socket(switch_memory_pool_t *pool);
 switch_status_t create_ei_cnode(const char *ip_addr, const char *name, struct ei_cnode_s *ei_cnode);
 switch_status_t ei_compare_pids(const erlang_pid *pid1, const erlang_pid *pid2);
@@ -150,6 +153,12 @@ int ei_decode_atom_safe(char *buf, int *index, char *dst);
 int ei_decode_string_or_binary_limited(char *buf, int *index, int maxsize, char *dst);
 int ei_decode_string_or_binary(char *buf, int *index, char **dst);
 switch_hash_t *create_default_filter();
+
+/* kazoo_commands.c */
+void add_kz_commands(switch_loadable_module_interface_t **module_interface, switch_api_interface_t *api_interface);
+
+/* kazoo_dptools.c */
+void add_kz_dptools(switch_loadable_module_interface_t **module_interface, switch_application_interface_t *app_interface);
 
 #define _ei_x_encode_string(buf, string) { ei_x_encode_binary(buf, string, strlen(string)); }
 

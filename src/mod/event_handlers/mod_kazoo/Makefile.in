@@ -1,7 +1,7 @@
 BASE=../../../..
 
-LOCAL_SOURCES=kazoo_utils.c kazoo_node.c kazoo_event_stream.c kazoo_fetch_agent.c
-LOCAL_OBJS=kazoo_utils.o kazoo_node.o kazoo_event_stream.o kazoo_fetch_agent.o
+LOCAL_SOURCES=kazoo_utils.c kazoo_node.c kazoo_event_stream.c kazoo_fetch_agent.c kazoo_commands.c kazoo_dptools.c
+LOCAL_OBJS=kazoo_utils.o kazoo_node.o kazoo_event_stream.o kazoo_fetch_agent.o kazoo_commands.o kazoo_dptools.o
 LOCAL_CFLAGS= @ERLANG_CFLAGS@ -D_REENTRANT -I$(BASE)/libs/apr/include
 LOCAL_LDFLAGS= @ERLANG_LDFLAGS@
 
