@@ -10091,55 +10091,62 @@ void sofia_handle_sip_i_invite(switch_core_session_t *session, nua_t *nua, sofia
 																						   "%sanswer,sofia_sla:%s", codec_str, b_private->uuid);
 					}
 				} else {
-					char *a_leg = NULL;
-				    switch_event_t *event = NULL;
-					if (sip->sip_replaces && sip->sip_replaces->rp_params && sip->sip_replaces->rp_call_id) {
-						a_leg = switch_find_parameter(*(sip->sip_replaces->rp_params), "a-leg", switch_core_session_get_pool(session));
-					}
-					if(a_leg) {
-						switch_channel_mark_hold(b_channel, SWITCH_FALSE);
-						tech_pvt->caller_profile->destination_number = switch_core_sprintf(tech_pvt->caller_profile->pool, "answer,intercept:%s", sip->sip_replaces->rp_call_id);
-						switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "call %s picked up on a-leg\n", sip->sip_replaces->rp_call_id);
-						if (sofia_test_pflag(profile, PFLAG_FIRE_TRANFER_EVENTS)
-							&& switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, MY_EVENT_INTERCEPTED) == SWITCH_STATUS_SUCCESS) {
-							switch_channel_event_set_data(b_channel, event);
-							switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "intercepted_by", sip->sip_call_id->i_id);
-							switch_event_fire(&event);
-						}
-					} else {
-						if (!zstr(bridge_uuid)) {
-							switch_channel_mark_hold(b_channel, SWITCH_FALSE);
-							tech_pvt->caller_profile->destination_number = switch_core_sprintf(tech_pvt->caller_profile->pool, "answer,intercept:%s", bridge_uuid);
-							if (sofia_test_pflag(profile, PFLAG_FIRE_TRANFER_EVENTS)
-								&& switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, MY_EVENT_INTERCEPTED) == SWITCH_STATUS_SUCCESS) {
-								switch_channel_event_set_data(b_channel, event);
-								switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "intercepted_by", sip->sip_call_id->i_id);
-								switch_event_fire(&event);
-							}
-						} else {
-							const char *b_app = switch_channel_get_variable(b_channel, SWITCH_CURRENT_APPLICATION_VARIABLE);
-							const char *b_data = switch_channel_get_variable(b_channel, SWITCH_CURRENT_APPLICATION_DATA_VARIABLE);
-							if (b_data && b_app) {
-								tech_pvt->caller_profile->destination_number = switch_core_sprintf(tech_pvt->caller_profile->pool, "answer,%s:%s", b_app, b_data);
-							} else if (b_app) {
-								tech_pvt->caller_profile->destination_number = switch_core_sprintf(tech_pvt->caller_profile->pool, "answer,%s", b_app);
-							}
-							if (sofia_test_pflag(profile, PFLAG_FIRE_TRANFER_EVENTS)
-								&& switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, MY_EVENT_REPLACED) == SWITCH_STATUS_SUCCESS) {
-								switch_channel_event_set_data(b_channel, event);
-								switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "att_xfer_replaced_by", sip->sip_call_id->i_id);
-								switch_event_fire(&event);
-							}							
-							switch_channel_hangup(b_channel, SWITCH_CAUSE_ATTENDED_TRANSFER);
-						}
-					}
-				}
+                                        char *a_leg = NULL;
+                                        switch_event_t *event = NULL;
+                                        if (sip->sip_replaces && sip->sip_replaces->rp_params && sip->sip_replaces->rp_call_id) {
+                                                a_leg = switch_find_parameter(*(sip->sip_replaces->rp_params), "a-leg", switch_core_session_get_pool(session));
+                                        }
+                                        if(a_leg) {
+                                                switch_channel_mark_hold(b_channel, SWITCH_FALSE);
+                                                tech_pvt->caller_profile->destination_number = switch_core_sprintf(tech_pvt->caller_profile->pool, "answer,intercept:%s", sip->sip_replaces->rp_call_id);
+                                                switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "call %s picked up on a-leg\n", sip->sip_replaces->rp_call_id);
+                                                if (sofia_test_pflag(profile, PFLAG_FIRE_TRANFER_EVENTS)
+                                                        && switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, MY_EVENT_INTERCEPTED) == SWITCH_STATUS_SUCCESS) {
+                                                        switch_channel_event_set_data(b_channel, event);
+                                                        switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "intercepted_by", sip->sip_call_id->i_id);
+                                                        switch_event_fire(&event);
+                                                }
+                                        } else {
+                                                if (!zstr(bridge_uuid)) {
+                                                        if (sip->sip_replaces && sip->sip_replaces->rp_params && sip->sip_replaces->rp_call_id && switch_channel_test_flag(b_channel, CF_BRIDGED) &&
+                                                                switch_true(switch_find_parameter(*(sip->sip_replaces->rp_params), "early-only", switch_core_session_get_pool(session)))) {
+                                                                switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "call %s intercept rejected\n", bridge_uuid);
+                                                                tech_pvt->caller_profile->destination_number = switch_core_sprintf(tech_pvt->caller_profile->pool, "hangup:CALL_REJECTED");
+                                                        } else {
+                                                                        switch_channel_mark_hold(b_channel, SWITCH_FALSE);
+                                                                        tech_pvt->caller_profile->destination_number = switch_core_sprintf(tech_pvt->caller_profile->pool, "answer,intercept:%s", bridge_uuid);
+                                                                        switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "call %s intercepted\n", bridge_uuid);
+                                                                        if (sofia_test_pflag(profile, PFLAG_FIRE_TRANFER_EVENTS) &&
+                                                                                switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, MY_EVENT_INTERCEPTED) == SWITCH_STATUS_SUCCESS) {
+                                                                                        switch_channel_event_set_data(b_channel, event);
+                                                                                        switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "intercepted_by", sip->sip_call_id->i_id);
+                                                                                        switch_event_fire(&event);
+                                                                        }
+                                                        }
+                                                } else {
+                                                        const char *b_app = switch_channel_get_variable(b_channel, SWITCH_CURRENT_APPLICATION_VARIABLE);
+                                                        const char *b_data = switch_channel_get_variable(b_channel, SWITCH_CURRENT_APPLICATION_DATA_VARIABLE);
+                                                        if (b_data && b_app) {
+                                                                tech_pvt->caller_profile->destination_number = switch_core_sprintf(tech_pvt->caller_profile->pool, "answer,%s:%s", b_app, b_data);
+                                                        } else if (b_app) {
+                                                                tech_pvt->caller_profile->destination_number = switch_core_sprintf(tech_pvt->caller_profile->pool, "answer,%s", b_app);
+                                                        }
+                                                        if (sofia_test_pflag(profile, PFLAG_FIRE_TRANFER_EVENTS)
+                                                                && switch_event_create_subclass(&event, SWITCH_EVENT_CUSTOM, MY_EVENT_REPLACED) == SWITCH_STATUS_SUCCESS) {
+                                                                switch_channel_event_set_data(b_channel, event);
+                                                                switch_event_add_header_string(event, SWITCH_STACK_BOTTOM, "att_xfer_replaced_by", sip->sip_call_id->i_id);
+                                                                switch_event_fire(&event);
+                                                        }
+                                                        switch_channel_hangup(b_channel, SWITCH_CAUSE_ATTENDED_TRANSFER);
+                                                }
+                                        }
+                                }
 
-				switch_core_session_rwunlock(b_session);
-			}
-		}
-		nua_handle_unref(bnh);
-	}
+                                switch_core_session_rwunlock(b_session);
+                        }
+                }
+                nua_handle_unref(bnh);
+        }
 
 
 
